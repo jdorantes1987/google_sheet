@@ -11,6 +11,7 @@ creds = service_account.Credentials.from_service_account_file(KEY, scopes=SCOPES
 
 service = build("sheets", "v4", credentials=creds)
 sheet = service.spreadsheets()
+hoy = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
 # Debe ser una matriz por eso el doble [[]]
 values = [
@@ -28,12 +29,14 @@ values = [
         None,
         "JACKSON DORANTES",
         "ENCUENTRISTA",
+        "JDORANTES",
+        hoy,
     ],
     [
         "V183291145",
         "JACKSON DORANTES",
         "MASCULINO",
-        datetime.strptime("19870806", "%Y%m%d").strftime("%m-%d-%Y"),
+        datetime.strptime("19870806", "%Y%m%d").strftime("%d-%m-%Y"),
         37,
         "CASAD@",
         "04143893828",
@@ -43,12 +46,14 @@ values = [
         None,
         None,
         "SERVIDOR",
+        "MJGRATEROL",
+        hoy,
     ],
     [
         "V15152791",
         "MIRTHA GRATEROL",
         "FEMENINO",
-        datetime.strptime("19801122", "%Y%m%d").strftime("%m-%d-%Y"),
+        datetime.strptime("19801122", "%Y%m%d").strftime("%d-%m-%Y"),
         45,
         "CASAD@",
         "04146126353",
@@ -58,6 +63,8 @@ values = [
         None,
         None,
         "SERVIDOR",
+        "JDORANTES",
+        hoy,
     ],
 ]
 # Llamamos a la api

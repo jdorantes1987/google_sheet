@@ -14,9 +14,7 @@ service = build("sheets", "v4", credentials=creds)
 sheet = service.spreadsheets()
 
 # Llamada a la api
-result = (
-    sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="ENCUENTRISTAS").execute()
-)
+result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range="DATA").execute()
 # Extraemos values del resultado en un dataframe de pandas
 values = result.get("values", [])
 df = DataFrame(values[1:], columns=values[0])
