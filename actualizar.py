@@ -18,6 +18,9 @@ worksheet = spreadsheet.worksheet("DATA")
 column_data_A = worksheet.col_values(14)
 column_data_B = worksheet.col_values(15)
 
+# Acumula las celdas que necesitan ser actualizadas
+requests = []
+
 # Recorre los datos de las columnas A y B y establece el color de fondo amarillo para celdas que cumplan la condición
 for i in range(len(column_data_A)):
     try:
@@ -25,33 +28,35 @@ for i in range(len(column_data_A)):
         cell_B = float(column_data_B[i])
         # Condición: el valor en la columna A debe ser mayor que el valor en la columna B
         if cell_B < cell_A:
-            body = {
-                "requests": [
-                    {
-                        "repeatCell": {
-                            "range": {
-                                "sheetId": worksheet.id,
-                                "startRowIndex": i,
-                                "endRowIndex": i + 1,
-                                "startColumnIndex": 0,
-                                "endColumnIndex": 17,
-                            },
-                            "cell": {
-                                "userEnteredFormat": {
-                                    "backgroundColor": {"red": 1, "green": 1, "blue": 0}
-                                }
-                            },
-                            "fields": "userEnteredFormat.backgroundColor",
-                        }
+            requests.append(
+                {
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": worksheet.id,
+                            "startRowIndex": i,
+                            "endRowIndex": i + 1,
+                            "startColumnIndex": 0,
+                            "endColumnIndex": 17,
+                        },
+                        "cell": {
+                            "userEnteredFormat": {
+                                "backgroundColor": {"red": 1, "green": 1, "blue": 0}
+                            }
+                        },
+                        "fields": "userEnteredFormat.backgroundColor",
                     }
-                ]
-            }
-            sheet_service = build("sheets", "v4", credentials=creds)
-            sheet_service.spreadsheets().batchUpdate(
-                spreadsheetId=spreadsheet.id, body=body
-            ).execute()
+                }
+            )
     except ValueError:
         # Ignorar celdas que no contienen números
         continue
+
+# Si hay celdas que necesitan ser actualizadas, hacer una sola llamada a la API
+if requests:
+    body = {"requests": requests}
+    sheet_service = build("sheets", "v4", credentials=creds)
+    sheet_service.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet.id, body=body
+    ).execute()
 
 print("¡Colores actualizados!")

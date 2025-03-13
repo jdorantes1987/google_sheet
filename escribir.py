@@ -2,18 +2,22 @@ from datetime import datetime
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
+# Definir los alcances y la ruta del archivo de credenciales
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 KEY = "key.json"
 SPREADSHEET_ID = "1OydEtwNEBl7ZacVRw_fJLkOJQQrgy184VyNJOAq8KpE"
 
-creds = None
+# Autenticarse utilizando las credenciales del servicio
 creds = service_account.Credentials.from_service_account_file(KEY, scopes=SCOPES)
 
+# Construir el servicio de la API de Google Sheets
 service = build("sheets", "v4", credentials=creds)
 sheet = service.spreadsheets()
+
+# Obtener la fecha y hora actual
 hoy = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
 
-# Debe ser una matriz por eso el doble [[]]
+# Definir los valores a insertar en la tabla
 values = [
     [
         "V28154135",
@@ -73,7 +77,8 @@ values = [
         hoy,
     ],
 ]
-# Llamamos a la api
+
+# Llamar a la API para insertar los valores
 result = (
     sheet.values()
     .append(
@@ -84,4 +89,6 @@ result = (
     )
     .execute()
 )
+
+# Imprimir el resultado de la operación
 print(f"Datos insertados correctamente.\n{(result.get('updates').get('updatedCells'))}")
