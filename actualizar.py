@@ -27,7 +27,7 @@ for i in range(len(column_data_A)):
         cell_A = float(column_data_A[i])
         cell_B = float(column_data_B[i])
         # Condición: el valor en la columna A debe ser mayor que el valor en la columna B
-        if cell_B < cell_A:
+        if (cell_A - cell_B) / cell_A > 0.5:
             requests.append(
                 {
                     "repeatCell": {
@@ -41,6 +41,27 @@ for i in range(len(column_data_A)):
                         "cell": {
                             "userEnteredFormat": {
                                 "backgroundColor": {"red": 1, "green": 1, "blue": 0}
+                            }
+                        },
+                        "fields": "userEnteredFormat.backgroundColor",
+                    }
+                }
+            )
+        else:
+            # Si no se cumple la condición, establecer el color de fondo blanco
+            requests.append(
+                {
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": worksheet.id,
+                            "startRowIndex": i,
+                            "endRowIndex": i + 1,
+                            "startColumnIndex": 0,
+                            "endColumnIndex": 17,
+                        },
+                        "cell": {
+                            "userEnteredFormat": {
+                                "backgroundColor": {"red": 1, "green": 1, "blue": 1}
                             }
                         },
                         "fields": "userEnteredFormat.backgroundColor",
