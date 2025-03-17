@@ -14,60 +14,59 @@ client = gspread.authorize(creds)
 spreadsheet = client.open("Datos_Encuentro")
 worksheet = spreadsheet.worksheet("DATA")
 
-# Obtiene los datos de las columnas A (índice 0) y B (índice 1)
+# Construir el servicio de la API de Google Sheets
+sheet_service = build("sheets", "v4", credentials=creds)
+
+# Quitar los filtros de la hoja
+clear_filter_request = {"clearBasicFilter": {"sheetId": worksheet.id}}
+sheet_service.spreadsheets().batchUpdate(
+    spreadsheetId=spreadsheet.id, body={"requests": [clear_filter_request]}
+).execute()
+
+# Obtiene los datos de las columnas A (índice 14) y B (índice 15)
 column_data_A = worksheet.col_values(14)
 column_data_B = worksheet.col_values(15)
 
 # Acumula las celdas que necesitan ser actualizadas
 requests = []
 
-# Recorre los datos de las columnas A y B y establece el color de fondo amarillo para celdas que cumplan la condición
-for i in range(len(column_data_A)):
+# Definir los colores de fondo
+colors = {
+    "greater": {"red": 0.67, "green": 0.89, "blue": 0.75},
+    "equal": {"red": 0.29, "green": 0.78, "blue": 0.52},
+    "zero": {"red": 1, "green": 0.61, "blue": 0.53},
+    "default": {"red": 1, "green": 1, "blue": 1},
+}
+
+# Recorre los datos de las columnas A y B y establece el color de fondo según la condición
+for i, (val_A, val_B) in enumerate(zip(column_data_A, column_data_B)):
     try:
-        cell_A = float(column_data_A[i])
-        cell_B = float(column_data_B[i])
-        # Condición: el valor en la columna A debe ser mayor que el valor en la columna B
-        if (cell_A - cell_B) / cell_A > 0.5:
-            requests.append(
-                {
-                    "repeatCell": {
-                        "range": {
-                            "sheetId": worksheet.id,
-                            "startRowIndex": i,
-                            "endRowIndex": i + 1,
-                            "startColumnIndex": 0,
-                            "endColumnIndex": 17,
-                        },
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": {"red": 1, "green": 1, "blue": 0}
-                            }
-                        },
-                        "fields": "userEnteredFormat.backgroundColor",
-                    }
-                }
-            )
+        cell_A = float(val_A)
+        cell_B = float(val_B)
+        if cell_B == 0:
+            color = colors["zero"]
+        elif cell_A > cell_B:
+            color = colors["greater"]
+        elif cell_A == cell_B:
+            color = colors["equal"]
         else:
-            # Si no se cumple la condición, establecer el color de fondo blanco
-            requests.append(
-                {
-                    "repeatCell": {
-                        "range": {
-                            "sheetId": worksheet.id,
-                            "startRowIndex": i,
-                            "endRowIndex": i + 1,
-                            "startColumnIndex": 0,
-                            "endColumnIndex": 17,
-                        },
-                        "cell": {
-                            "userEnteredFormat": {
-                                "backgroundColor": {"red": 1, "green": 1, "blue": 1}
-                            }
-                        },
-                        "fields": "userEnteredFormat.backgroundColor",
-                    }
+            color = colors["default"]
+
+        requests.append(
+            {
+                "repeatCell": {
+                    "range": {
+                        "sheetId": worksheet.id,
+                        "startRowIndex": i,
+                        "endRowIndex": i + 1,
+                        "startColumnIndex": 0,
+                        "endColumnIndex": 17,
+                    },
+                    "cell": {"userEnteredFormat": {"backgroundColor": color}},
+                    "fields": "userEnteredFormat.backgroundColor",
                 }
-            )
+            }
+        )
     except ValueError:
         # Ignorar celdas que no contienen números
         continue
@@ -75,7 +74,6 @@ for i in range(len(column_data_A)):
 # Si hay celdas que necesitan ser actualizadas, hacer una sola llamada a la API
 if requests:
     body = {"requests": requests}
-    sheet_service = build("sheets", "v4", credentials=creds)
     sheet_service.spreadsheets().batchUpdate(
         spreadsheetId=spreadsheet.id, body=body
     ).execute()
